@@ -291,7 +291,7 @@ Class Walk2Controller extends AbstractController {
     public function requestWithdrawalNewAction () {
         if (isset($this->inputData['amount']) && $this->inputData['amount']) {
             //是否绑定微信
-            $sql = 'SELECT unionid, openid, umeng_token, user_status FROM t_user WHERE user_id = ?';
+            $sql = 'SELECT unionid, openid, umeng_token, user_status, ali_user_id FROM t_user WHERE user_id = ?';
             $payInfo = $this->db->getRow($sql, $this->userId);
             if (!$payInfo['user_status']) {
                 return new ApiReturn('', 408, '申请失败');
@@ -326,11 +326,21 @@ Class Walk2Controller extends AbstractController {
             }
             if (isset($payInfo['unionid']) && $payInfo['unionid'] && isset($payInfo['openid']) && $payInfo['openid']) {
                 //1元提现只能一次 to do
-                if (in_array($withdrawalAmount, array(1, 5))) {
-                    $sql = 'SELECT COUNT(*) FROM t_withdraw WHERE user_id = ? AND withdraw_amount = ? AND (withdraw_status = "pending" OR withdraw_status = "success")';
-                    if ($this->db->getOne($sql, $this->userId, $withdrawalAmount)) {
-                        return new ApiReturn('', 405, '新用户首次提现专享');
-                    }
+                switch ($withdrawalAmount) {
+                    case 0.3:
+                        $sql = 'SELECT COUNT(*) FROM t_withdraw WHERE user_id = ? AND (withdraw_amount = 1 OR withdraw_amount = 0.3) AND (withdraw_status = "pending" OR withdraw_status = "success")';
+                        if ($this->db->getOne($sql, $this->userId)) {
+                            return new ApiReturn('', 405, '新用户首次提现专享');
+                        }
+                        break;
+                    case 1:
+                    case 5:
+                    case 50:
+                        $sql = 'SELECT COUNT(*) FROM t_withdraw WHERE user_id = ? AND withdraw_amount = ? AND (withdraw_status = "pending" OR withdraw_status = "success")';
+                        if ($this->db->getOne($sql, $this->userId, $withdrawalAmount)) {
+                            return new ApiReturn('', 405, '新用户首次提现专享');
+                        }
+                        break;
                 }
                 $sql = 'INSERT INTO t_withdraw (user_id, withdraw_amount, withdraw_gold, withdraw_status, withdraw_method, wechat_openid) SELECT :user_id, :withdraw_amount,:withdraw_gold, :withdraw_status, :withdraw_method, :wechat_openid FROM DUAL WHERE NOT EXISTS (SELECT withdraw_id FROM t_withdraw WHERE user_id = :user_id AND withdraw_amount = :withdraw_amount AND withdraw_status = :withdraw_status)';
                 $this->db->exec($sql, array('user_id' => $this->userId, 'withdraw_amount' => $withdrawalAmount, 'withdraw_gold' => $withdrawalGold, 'withdraw_method' => 'wechat', 'withdraw_status' => 'pending', 'wechat_openid' => $payInfo['openid']));
