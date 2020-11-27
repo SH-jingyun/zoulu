@@ -219,9 +219,9 @@ Class User2Controller extends AbstractController {
         }
         $userInfo['gearList'] = array();
 
-        foreach (array(0.3, 50, 100, 150, 200) as $withdraw) {
-            if (in_array($withdraw, array(0.3))) {
-                $sql = 'SELECT COUNT(withdraw_id) FROM t_withdraw WHERE (withdraw_amount = 0.3 OR withdraw_amount = 1) AND user_id = ? AND (withdraw_status = "pending" OR withdraw_status = "success")';
+        foreach (array(1, 10, 20, 50, 100) as $withdraw) {
+            if (in_array($withdraw, array(1))) {
+                $sql = 'SELECT COUNT(withdraw_id) FROM t_withdraw WHERE withdraw_amount = 1 AND user_id = ? AND (withdraw_status = "pending" OR withdraw_status = "success")';
                 if ($this->db->getOne($sql, $userId)) {
                     continue;
                 }

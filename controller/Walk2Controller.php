@@ -327,15 +327,8 @@ Class Walk2Controller extends AbstractController {
             if (isset($payInfo['unionid']) && $payInfo['unionid'] && isset($payInfo['openid']) && $payInfo['openid']) {
                 //1元提现只能一次 to do
                 switch ($withdrawalAmount) {
-                    case 0.3:
-                        $sql = 'SELECT COUNT(*) FROM t_withdraw WHERE user_id = ? AND (withdraw_amount = 1 OR withdraw_amount = 0.3) AND (withdraw_status = "pending" OR withdraw_status = "success")';
-                        if ($this->db->getOne($sql, $this->userId)) {
-                            return new ApiReturn('', 405, '新用户首次提现专享');
-                        }
-                        break;
                     case 1:
                     case 5:
-                    case 50:
                         $sql = 'SELECT COUNT(*) FROM t_withdraw WHERE user_id = ? AND withdraw_amount = ? AND (withdraw_status = "pending" OR withdraw_status = "success")';
                         if ($this->db->getOne($sql, $this->userId, $withdrawalAmount)) {
                             return new ApiReturn('', 405, '新用户首次提现专享');
